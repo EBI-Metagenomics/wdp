@@ -14,7 +14,7 @@
 
 ## Introduction
 
-**EBI-Metagenomics/wdp** is a bioinformatics pipeline that ...
+**EBI-Metagenomics/wdp** is a bioinformatics pipeline that integrates: (i) codon table determination using gTranslate, (ii) genome quality control with CheckM2; (iii) gemsparcl, an ultra-fast bacterial genome clustering tool; (iv) a representative genome selection system; and (v) mettannotator, a pipeline for comprehensive prokaryotic genome annotation. Our pipeline demonstrates a use case for scalable representation of prokaryotic genomes across species, integrable across open-access resources such as MGnify and Ensembl.
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -24,7 +24,8 @@
 
 <!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
      workflows use the "tube map" design for that. See https://nf-co.re/docs/community/brand/workflow-schematics#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+
+> **Status:** actively under development. Subworkflows and modules are still being built out — this README will grow as pipeline stages land.
 
 ## Usage
 
@@ -65,7 +66,7 @@ nextflow run EBI-Metagenomics/wdp \
 
 EBI-Metagenomics/wdp was originally written by Christina Vasilopoulou.
 
-We thank the following people for their extensive assistance in the development of this pipeline:
+<!-- We thank the following people for their extensive assistance in the development of this pipeline:
 
 <!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
