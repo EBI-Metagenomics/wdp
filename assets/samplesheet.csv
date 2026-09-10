@@ -1,4 +1,4 @@
-accession,fasta,taxid,known_ttable
+prefix,assembly,taxid,known_ttable
 GCA_000006625.1,/path/to/genomes/GCA_000006625.1.fasta.gz,273119,4
 GCA_000005845.2,/path/to/genomes/GCA_000005845.2.fasta.gz,511145,
 GCA_900540015.1,/path/to/genomes/GCA_900540015.1.fasta.gz,165185,

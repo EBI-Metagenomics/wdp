@@ -7,33 +7,33 @@
     "items": {
         "type": "object",
         "properties": {
-            "accession": {
+            "prefix": {
                 "type": "string",
                 "pattern": "^GC[AF]_[0-9]+\\.[0-9]+$",
                 "meta": ["id"],
                 "unique": true,
-                "errorMessage": "Accession must be a versioned GCA/GCF accession (e.g. GCA_000006625.1) -- must match the basename of the fasta file exactly, since downstream tools (CheckM2, gTranslate, GUNC) derive each genome's ID from its fasta filename with only the .fasta.gz suffix stripped"
+                "errorMessage": "Prefix must be a versioned GCA/GCF accession (e.g. GCA_000006625.1) -- must match the basename of the assembly file exactly (before .fa/.fna/.fasta/.fasta.gz), since downstream tools (CheckM2, gTranslate, GUNC) derive each genome's ID from its assembly filename with only that suffix stripped"
             },
-            "fasta": {
+            "assembly": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^\\S+\\.fasta\\.gz$",
-                "errorMessage": "FASTA file must exist and end in .fasta.gz (wdp's genomes are always gzipped -- note this deliberately differs from mettannotator's uncompressed .fa/.fna/.fasta convention)"
+                "errorMessage": "Assembly file must exist and have extension .fasta.gz -- must be named exactly '<prefix>.fasta.gz'"
             },
             "taxid": {
                 "type": "integer",
                 "minimum": 1,
                 "meta": ["taxid"],
-                "errorMessage": "taxid is required for the taxid_codon_cache lookup"
+                "errorMessage": "taxid must be a valid NCBI taxid (positive integer)"
             },
             "known_ttable": {
                 "type": "string",
                 "pattern": "^([0-9]+)?$",
                 "meta": ["known_ttable"],
-                "description": "Optional per-genome codon table override (e.g. a hand-curated test row for a known table-4 genome). Leave empty to fall through to the taxid_codon_cache_tsv lookup, then gTranslate if still unresolved. Mirrors mettannotator's optional-column-skips-a-step pattern (gene_calls_gff/annotation_source)."
+                "description": "Optional per-genome codon table override (e.g. a hand-curated test row for a known table-4 genome). Leave empty to fall through to gTranslate."
             }
         },
-        "required": ["accession", "fasta", "taxid"]
+        "required": ["prefix", "assembly", "taxid"]
     }
 }
