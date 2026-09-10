@@ -20,7 +20,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file listing the input genome assemblies to process.",
-                    "help_text": "Comma-separated file with a header row, one row per genome assembly. Required columns: accession (versioned GCA/GCF, e.g. GCA_000006625.1), fasta (path to a .fasta.gz file), taxid. Optional columns: known_ttable (per-genome codon table override). See assets/schema_input.json and assets/samplesheet.csv for the full spec and an example.",
+                    "help_text": "Comma-separated file with a header row, one row per genome assembly. Required columns: prefix (versioned GCA/GCF, e.g. GCA_000006625.1), assembly (path to a .fasta.gz file), taxid. Optional columns: known_ttable (per-genome codon table override). See assets/schema_input.json and assets/samplesheet.csv for the full spec and an example.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -33,6 +33,28 @@
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature"
+                }
+            }
+        },
+        "genome_qc_options": {
+            "title": "Genome QC and clustering options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Options for codon-table resolution, QC, and clustering of input genomes.",
+            "properties": {
+                "gtranslate_model_path": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Path to a pre-staged directory of gTranslate's GTDB classifier model files. If not supplied, the pipeline downloads them itself.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "gtranslate_chunk_size": {
+                    "type": "integer",
+                    "default": 5000,
+                    "minimum": 1,
+                    "description": "Maximum number of genomes per GTRANSLATE_DETECTTABLE call. Genomes that fall through to gTranslate (no known_ttable supplied) are split into chunks of this size, so no single task holds the whole population.",
+                    "fa_icon": "fas fa-layer-group"
                 }
             }
         },
