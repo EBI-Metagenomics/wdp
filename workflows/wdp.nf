@@ -3,11 +3,12 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_wdp_pipeline'
+include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap        } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_wdp_pipeline'
+include { CODON_TABLE_RESOLUTION  } from '../subworkflows/local/codon_table_resolution'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,11 +24,38 @@ workflow WDP {
     multiqc_logo
     multiqc_methods_description
     outdir
+    gtranslate_model_path
+    gtranslate_chunk_size
 
     main:
 
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
+
+    //
+    // SUBWORKFLOW: Resolve each genome's codon (translation) table
+    //
+    CODON_TABLE_RESOLUTION (
+        ch_samplesheet,
+        gtranslate_model_path,
+        gtranslate_chunk_size
+    )
+
+    // Minimal, human-readable proof-of-wiring output: one row per genome, prefix -> resolved
+    // codon table. Not part of the eventual production output shape -- CheckM2/GUNC/gemsparcl
+    // will consume CODON_TABLE_RESOLUTION.out.genomes_with_table directly once those modules
+    // exist (Task 6); this file exists only so the codon-table wiring can be verified in
+    // isolation before the rest of the chain is built.
+    CODON_TABLE_RESOLUTION.out.genomes_with_table
+        .map { meta, assembly -> "${meta.id}\t${meta.known_table}" }
+        .collectFile(
+            name: 'codon_table_resolution_summary.tsv',
+            newLine: true,
+            sort: true,
+            storeDir: "${outdir}/codon_table_resolution",
+            seed: "prefix\tknown_table"
+        )
+
 
     //
     // Collate and save software versions
