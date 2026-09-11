@@ -8,7 +8,7 @@ include { paramsSummaryMap        } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_wdp_pipeline'
-include { CODON_TABLE_RESOLUTION  } from '../subworkflows/local/codon_table_resolution'
+include { GENOME_QC               } from '../subworkflows/local/genome_qc'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,6 +26,8 @@ workflow WDP {
     outdir
     gtranslate_model_path
     gtranslate_chunk_size
+    checkm2_db
+    checkm2_chunk_size
 
     main:
 
@@ -33,29 +35,32 @@ workflow WDP {
     def ch_multiqc_files = channel.empty()
 
     //
-    // SUBWORKFLOW: Resolve each genome's codon (translation) table
+    // SUBWORKFLOW: Codon-table resolution + CheckM2 QC
     //
-    CODON_TABLE_RESOLUTION (
+    GENOME_QC (
         ch_samplesheet,
         gtranslate_model_path,
-        gtranslate_chunk_size
+        gtranslate_chunk_size,
+        checkm2_db,
+        checkm2_chunk_size
     )
+    ch_versions = ch_versions.mix(GENOME_QC.out.versions)
 
     // Minimal, human-readable proof-of-wiring output: one row per genome, prefix -> resolved
-    // codon table. Not part of the eventual production output shape -- CheckM2/GUNC/gemsparcl
-    // will consume CODON_TABLE_RESOLUTION.out.genomes_with_table directly once those modules
-    // exist (Task 6); this file exists only so the codon-table wiring can be verified in
-    // isolation before the rest of the chain is built.
-    CODON_TABLE_RESOLUTION.out.genomes_with_table
-        .map { meta, assembly -> "${meta.id}\t${meta.known_table}" }
+    // codon table + CheckM2 completeness/contamination/passes_qc_80_5.
+    // NOTE: passes_qc_80_5/qs50/qs80 here are all CheckM2-only, not the final combined QC decision
+    // (GUNC's AND-condition isn't applied yet).
+    GENOME_QC.out.genomes_with_qc
+        .map { meta, assembly ->
+            "${meta.id}\t${meta.known_table}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}"
+        }
         .collectFile(
-            name: 'codon_table_resolution_summary.tsv',
+            name: 'genome_qc_summary.tsv',
             newLine: true,
             sort: true,
-            storeDir: "${outdir}/codon_table_resolution",
-            seed: "prefix\tknown_table"
+            storeDir: "${outdir}/genome_qc",
+            seed: "prefix\tknown_table\tcompleteness\tcontamination\tpasses_qc_80_5\tquality_score\tqs50\tqs80"
         )
-
 
     //
     // Collate and save software versions
