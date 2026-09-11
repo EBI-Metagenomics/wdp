@@ -55,6 +55,20 @@
                     "minimum": 1,
                     "description": "Maximum number of genomes per GTRANSLATE_DETECTTABLE call. Genomes that fall through to gTranslate (no known_ttable supplied) are split into chunks of this size, so no single task holds the whole population.",
                     "fa_icon": "fas fa-layer-group"
+                },
+                "checkm2_db": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Path to a pre-staged CheckM2 .dmnd database file. If not supplied, the pipeline downloads it itself.",
+                    "fa_icon": "fas fa-database"
+                },
+                "checkm2_chunk_size": {
+                    "type": "integer",
+                    "default": 10000,
+                    "minimum": 1,
+                    "description": "Maximum number of genomes per CHECKM2 call within one resolved-codon-table group. Genomes are first grouped by resolved translation table (CheckM2's --ttable applies to the whole invocation), then split into chunks of this size.",
+                    "fa_icon": "fas fa-layer-group"
                 }
             }
         },
@@ -198,6 +212,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/genome_qc_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
