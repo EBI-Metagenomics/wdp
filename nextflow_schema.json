@@ -69,6 +69,20 @@
                     "minimum": 1,
                     "description": "Maximum number of genomes per CHECKM2 call within one resolved-codon-table group. Genomes are first grouped by resolved translation table (CheckM2's --ttable applies to the whole invocation), then split into chunks of this size.",
                     "fa_icon": "fas fa-layer-group"
+                },
+                "gunc_db": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Path to a pre-staged GUNC .dmnd database file (progenomes_2.1). If not supplied, the pipeline downloads it itself.",
+                    "fa_icon": "fas fa-database"
+                },
+                "gunc_chunk_size": {
+                    "type": "integer",
+                    "default": 1000,
+                    "minimum": 1,
+                    "description": "Maximum number of genomes per GUNC_RUN call. No codon-table grouping needed (unlike CheckM2) -- genomes are split into chunks of this size directly.",
+                    "fa_icon": "fas fa-layer-group"
                 }
             }
         },

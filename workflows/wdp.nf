@@ -28,6 +28,8 @@ workflow WDP {
     gtranslate_chunk_size
     checkm2_db
     checkm2_chunk_size
+    gunc_db
+    gunc_chunk_size
 
     main:
 
@@ -35,31 +37,36 @@ workflow WDP {
     def ch_multiqc_files = channel.empty()
 
     //
-    // SUBWORKFLOW: Codon-table resolution + CheckM2 QC
+    // SUBWORKFLOW: Codon-table resolution + CheckM2 QC + GUNC QC, combined QC gate
     //
     GENOME_QC (
         ch_samplesheet,
         gtranslate_model_path,
         gtranslate_chunk_size,
         checkm2_db,
-        checkm2_chunk_size
+        checkm2_chunk_size,
+        gunc_db,
+        gunc_chunk_size
     )
     ch_versions = ch_versions.mix(GENOME_QC.out.versions)
 
     // Minimal, human-readable proof-of-wiring output: one row per genome, prefix -> resolved
-    // codon table + CheckM2 completeness/contamination/passes_qc_80_5.
-    // NOTE: passes_qc_80_5/qs50/qs80 here are all CheckM2-only, not the final combined QC decision
-    // (GUNC's AND-condition isn't applied yet).
+    // codon table + CheckM2/GUNC QC metrics + the final combined passes_qc decision. Not part of
+    // the eventual production output shape -- gemsparcl will consume GENOME_QC.out.genomes_with_qc
+    //
+    // One row is emitted per genome regardless of how many CHECKM2/GUNC chunks produced them --
+    // collectFile's static `name:` means every row across every chunk lands in this same single
+    // file, not one file per chunk.
     GENOME_QC.out.genomes_with_qc
         .map { meta, assembly ->
-            "${meta.id}\t${meta.known_table}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}"
+            "${meta.id}\t${meta.known_table}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}\t${meta.gunc_contaminated}\t${meta.passes_qc}"
         }
         .collectFile(
             name: 'genome_qc_summary.tsv',
             newLine: true,
             sort: true,
             storeDir: "${outdir}/genome_qc",
-            seed: "prefix\tknown_table\tcompleteness\tcontamination\tpasses_qc_80_5\tquality_score\tqs50\tqs80"
+            seed: "prefix\tknown_table\tcompleteness\tcontamination\tpasses_qc_80_5\tquality_score\tqs50\tqs80\tgunc_contaminated\tpasses_qc"
         )
 
     //
