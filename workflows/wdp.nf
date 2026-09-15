@@ -50,13 +50,8 @@ workflow WDP {
     )
     ch_versions = ch_versions.mix(GENOME_QC.out.versions)
 
-    // Minimal, human-readable proof-of-wiring output: one row per genome, prefix -> resolved
-    // codon table + CheckM2/GUNC QC metrics + the final combined passes_qc decision. Not part of
-    // the eventual production output shape -- gemsparcl will consume GENOME_QC.out.genomes_with_qc
-    //
-    // One row is emitted per genome regardless of how many CHECKM2/GUNC chunks produced them --
-    // collectFile's static `name:` means every row across every chunk lands in this same single
-    // file, not one file per chunk.
+    // Combined summary genoome QC output: one row per genome, prefix -> resolved
+    // codon table + CheckM2/GUNC QC metrics + the final combined passes_qc decision. 
     GENOME_QC.out.genomes_with_qc
         .map { meta, assembly ->
             "${meta.id}\t${meta.known_table}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}\t${meta.gunc_contaminated}\t${meta.passes_qc}"

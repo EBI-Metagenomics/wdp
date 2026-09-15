@@ -7,7 +7,8 @@ include { CODON_TABLE_RESOLUTION  } from '../codon_table_resolution/main'
 include { CHECKM2                 } from '../../../modules/ebi-metagenomics/checkm2/checkm2/main'
 include { CHECKM2_DOWNLOAD_DB     } from '../../../modules/ebi-metagenomics/checkm2/download_db/main'
 include { GUNC_DOWNLOADDB         } from '../../../modules/nf-core/gunc/downloaddb/main'
-include { GUNC_RUN                } from '../../../modules/nf-core/gunc/run/main'  
+include { GUNC_RUN                } from '../../../modules/nf-core/gunc/run/main'
+include { GUNC_FILTER             } from '../../../modules/local/gunc/filter/main'
 
 workflow GENOME_QC {
 
@@ -75,25 +76,23 @@ workflow GENOME_QC {
         : GUNC_DOWNLOADDB(Channel.value('progenomes_2.1')).db
 
     GUNC_RUN(ch_gunc_in, ch_gunc_db)
+
+    ch_completeness_tsv = ch_checkm2_per_genome
+        .map { name, completeness, contamination -> "${name}\t${completeness}\t${contamination}" }
+        .collectFile(name: 'checkm2_completeness.tsv', newLine: true, sort: true,
+            seed: "genome\tcompleteness\tcontamination")
+
+    GUNC_FILTER(GUNC_RUN.out.maxcss_level_tsv, ch_completeness_tsv)
    
-    ch_gunc_per_genome = GUNC_RUN.out.maxcss_level_tsv
+    ch_gunc_per_genome = GUNC_FILTER.out.result
         .flatMap { meta, tsv -> tsv.splitCsv(header: true, sep: '\t') }
-        .map { row ->
-            // Contamination thresholds verified directly against EBI-Metagenomics/
-            // genomes-catalogue-pipeline's modules/gunc.nf
-            def contaminated = (
-                (row.clade_separation_score as Double) > 0.45 &&
-                (row.contamination_portion as Double) > 0.05 &&
-                (row.reference_representation_score as Double) > 0.5
-            )
-            [row.genome, contaminated]
-        }
+        .map { row -> [row.genome, row.gunc_contaminated == 'true', row.gunc_excluded == 'true'] }
 
     ch_genomes_with_qc = ch_all_genomes
         .map { meta, fasta -> [meta.id, meta, fasta] }
         .join(ch_checkm2_per_genome)
         .join(ch_gunc_per_genome)
-        .map { id, meta, fasta, completeness, contamination, gunc_contaminated ->
+        .map { id, meta, fasta, completeness, contamination, gunc_contaminated, gunc_excluded ->
             // Quality score (QS) = completeness - 5*contamination, matching
             // EBI-Metagenomics/genomes-catalogue-pipeline's real formula (bin/filter_qs50.py:
             // `qs50()`). qs50/qs80 apply that same function at two thresholds -- both also
@@ -104,21 +103,21 @@ workflow GENOME_QC {
             [ meta + [
                 completeness: completeness,
                 contamination: contamination,
-                passes_qc_80_5: (completeness >= 80.0 && contamination < 5.0),
+                passes_qc_80_5: passes_qc_80_5,
                 quality_score: quality_score,
                 qs50: (contamination <= 5.0 && quality_score >= 50.0),
                 qs80: (contamination <= 5.0 && quality_score >= 80.0),
                 gunc_contaminated: gunc_contaminated,
-                // Final combined QC gate -- matches genomes-catalogue-pipeline's real exclusion
-                // logic exactly: a genome is only excluded by GUNC if it's ALSO <90% complete.
-                // GUNC alone never excludes a >=90%-complete genome (fact 4).
-                passes_qc: passes_qc_80_5 && !(gunc_contaminated && completeness < 90.0)
+                // Final combined QC gate -- gunc_excluded is GUNC_FILTER's own awk-computed
+                // intersection (gunc_contaminated AND completeness<90), matching
+                // genomes-catalogue-pipeline's real bad.txt logic exactly.
+                passes_qc: passes_qc_80_5 && !gunc_excluded
             ], fasta ]
         }
 
     emit:
     genomes_with_qc = ch_genomes_with_qc   // channel: [ meta (+completeness/contamination/
-                                           //           passes_qc_80_5/quality_score/qs50/qs80
+                                           //           passes_qc_80_5/quality_score/qs50/qs80/
                                            //           gunc_contaminated/passes_qc), fasta ]
     versions        = ch_versions
 }
