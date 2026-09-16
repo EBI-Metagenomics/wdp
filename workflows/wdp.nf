@@ -9,6 +9,8 @@ include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_p
 include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_wdp_pipeline'
 include { GENOME_QC               } from '../subworkflows/local/genome_qc'
+include { GEMSPARCL_CLUSTERING    } from '../subworkflows/local/gemsparcl_clustering'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +52,12 @@ workflow WDP {
     )
     ch_versions = ch_versions.mix(GENOME_QC.out.versions)
 
-    // Combined summary genoome QC output: one row per genome, prefix -> resolved
+    //
+    // SUBWORKFLOW: Cluster QC-passing genomes with gemsparcl, then export a Cytoscape network
+    //
+    GEMSPARCL_CLUSTERING(GENOME_QC.out.genomes_with_qc)
+
+    // Combined summary genome QC output: one row per genome, prefix -> resolved
     // codon table + CheckM2/GUNC QC metrics + the final combined passes_qc decision. 
     GENOME_QC.out.genomes_with_qc
         .map { meta, assembly ->
