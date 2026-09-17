@@ -2,9 +2,35 @@
     "name": "EBI-Metagenomics/wdp",
     "homePage": "https://github.com/EBI-Metagenomics/wdp",
     "repos": {
+        "https://github.com/EBI-Metagenomics/nf-modules.git": {
+            "modules": {
+                "ebi-metagenomics": {
+                    "checkm2/checkm2": {
+                        "branch": "main",
+                        "git_sha": "6879764497319f563bc4ab93e76d309a9c914b62",
+                        "installed_by": ["modules"]
+                    },
+                    "checkm2/download_db": {
+                        "branch": "main",
+                        "git_sha": "1071077dc2886d1e31971b6b44bfaf94ace897af",
+                        "installed_by": ["modules"]
+                    }
+                }
+            }
+        },
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "gunc/downloaddb": {
+                        "branch": "master",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"]
+                    },
+                    "gunc/run": {
+                        "branch": "master",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"]
+                    },
                     "multiqc": {
                         "branch": "master",
                         "git_sha": "98403d15b0e50edae1f3fec5eae5e24982f1fade",

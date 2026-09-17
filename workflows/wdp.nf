@@ -3,15 +3,18 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_wdp_pipeline'
+include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap        } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_wdp_pipeline'
+include { GENOME_QC               } from '../subworkflows/local/genome_qc'
+include { GEMSPARCL_CLUSTERING    } from '../subworkflows/local/gemsparcl_clustering'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
+    RUN MAIN WDP WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -23,11 +26,50 @@ workflow WDP {
     multiqc_logo
     multiqc_methods_description
     outdir
+    gtranslate_model_path
+    gtranslate_chunk_size
+    checkm2_db
+    checkm2_chunk_size
+    gunc_db
+    gunc_chunk_size
 
     main:
 
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
+
+    //
+    // SUBWORKFLOW: Codon-table resolution + CheckM2 QC + GUNC QC, combined QC gate
+    //
+    GENOME_QC (
+        ch_samplesheet,
+        gtranslate_model_path,
+        gtranslate_chunk_size,
+        checkm2_db,
+        checkm2_chunk_size,
+        gunc_db,
+        gunc_chunk_size
+    )
+    ch_versions = ch_versions.mix(GENOME_QC.out.versions)
+
+    //
+    // SUBWORKFLOW: Cluster QC-passing genomes with gemsparcl, then export a Cytoscape network
+    //
+    GEMSPARCL_CLUSTERING(GENOME_QC.out.genomes_with_qc)
+
+    // Combined summary genome QC output: one row per genome, prefix -> resolved
+    // codon table + CheckM2/GUNC QC metrics + the final combined passes_qc decision. 
+    GENOME_QC.out.genomes_with_qc
+        .map { meta, assembly ->
+            "${meta.id}\t${meta.known_table}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}\t${meta.gunc_contaminated}\t${meta.passes_qc}"
+        }
+        .collectFile(
+            name: 'genome_qc_summary.tsv',
+            newLine: true,
+            sort: true,
+            storeDir: "${outdir}/genome_qc",
+            seed: "prefix\tknown_table\tcompleteness\tcontamination\tpasses_qc_80_5\tquality_score\tqs50\tqs80\tgunc_contaminated\tpasses_qc"
+        )
 
     //
     // Collate and save software versions

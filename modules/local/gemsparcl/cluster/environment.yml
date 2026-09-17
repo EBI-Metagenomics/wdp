@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/environment-schema.json
+#
+# Mirrors gemsparcl's real container composition (EBI-Metagenomics/containers:
+# gemsparcl/078c47d/env.yaml + Dockerfile) -- gemsparcl itself has no bioconda package, it's
+# pip-installed from a pinned GitHub commit. procps-ng is required for Nextflow's task-metrics
+# collection under Singularity (same fix already needed for gtranslate).
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - conda-forge::git
+  - conda-forge::python
+  - conda-forge::pip
+  - conda-forge::procps-ng
+  - bioconda::sketchlib=0.4.1
+  - pip:
+      - git+https://github.com/johannahelene/gemsparcl@078c47dbbc1a45f7ab2532666da13f4f2aaab6b8

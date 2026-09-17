@@ -1,0 +1,57 @@
+name: gtranslate_detecttable
+description: Predict the genetic translation table (4 or 11) used by each prokaryotic genome in a batch, using gTranslate's pre-trained classifier models
+keywords:
+  - codon table
+  - genetic code
+  - prokaryotes
+  - gTranslate
+  - Prodigal
+tools:
+  - gtranslate:
+      description: |
+        gTranslate detects the genetic translation table (GTT) used in prokaryotic organisms by
+        calling genes with Prodigal under both candidate tables and comparing features (coding
+        density, GC content, tryptophan codon usage) against pre-trained classifier models.
+      homepage: https://github.com/cmc-aau/gTranslate
+      documentation: https://github.com/cmc-aau/gTranslate
+      licence:
+        - "Apache-2.0"
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information, e.g. [ id:'gtranslate_batch' ]
+    - fastas:
+        type: file
+        description: One or more gzipped genome FASTA files to predict the translation table for, staged into batch_input/
+        pattern: "*.fasta.gz"
+  - - model_dir:
+        type: directory
+        description: Directory containing gTranslate's unpacked GTDB r232 classifier model files, from GTRANSLATE_DOWNLOADMODELS
+output:
+  translation_table_summary:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information, e.g. [ id:'gtranslate_batch' ]
+      - "results/${meta.id}.translation_table_summary.tsv":
+          type: file
+          description: |
+            Per-genome predicted translation table summary. Columns include user_genome
+            (bare accession, matches the input fasta's basename with .fasta.gz stripped) and
+            best_tln_table (the predicted table, 4 or 11).
+          pattern: "*.translation_table_summary.tsv"
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - gtranslate:
+          type: string
+          description: The tool name
+      - gtranslate --version | sed -E 's/.*version ([0-9.]+).*/\1/':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@ChristinaVasil"
+maintainers:
+  - "@ChristinaVasil"

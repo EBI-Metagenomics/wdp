@@ -1,0 +1,36 @@
+name: gtranslate_downloadmodels
+description: Download and unpack gTranslate's pre-trained GTDB r232 classifier models, used by GTRANSLATE_DETECTTABLE to predict each genome's translation table
+keywords:
+  - codon table
+  - genetic code
+  - prokaryotes
+  - gTranslate
+tools:
+  - gtranslate:
+      description: |
+        gTranslate detects the genetic translation table (GTT) used by a prokaryotic genome,
+        via a set of pre-trained classifier models bundled separately from the tool itself.
+      homepage: https://github.com/cmc-aau/gTranslate
+      documentation: https://github.com/cmc-aau/gTranslate
+      licence:
+        - "Apache-2.0"
+input: []
+output:
+  model_dir:
+    - path("gtranslate_models"):
+        type: directory
+        description: Directory containing gTranslate's unpacked GTDB r232 classifier model files (.pkl.gz)
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - gtranslate:
+          type: string
+          description: The tool name
+      - gtranslate --version | sed -E 's/.*version ([0-9.]+).*/\1/':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@ChristinaVasil"
+maintainers:
+  - "@ChristinaVasil"

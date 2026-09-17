@@ -1,0 +1,58 @@
+name: gunc_filter
+description: |
+  Combine GUNC's contamination scores with CheckM2 completeness to decide per-genome GUNC-driven
+  QC exclusion, reproducing EBI-Metagenomics/genomes-catalogue-pipeline's modules/gunc.nf
+  awk/grep logic as an actual shell script.
+keywords:
+  - gunc
+  - checkm2
+  - filter
+  - quality control
+  - prokaryote
+tools:
+  - gawk:
+      description: GNU awk, used here to implement the reference pipeline's real threshold logic.
+      homepage: https://www.gnu.org/software/gawk/
+      documentation: https://www.gnu.org/software/gawk/manual/gawk.html
+      licence: ["GPL v3"]
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing chunk information, e.g. [ id:'gunc_chunk0' ]
+    - maxcss_tsv:
+        type: file
+        description: Raw GUNC maxCSS-level output for this chunk, from GUNC_RUN
+        pattern: "*maxCSS_level.tsv"
+  - - completeness_tsv:
+        type: file
+        description: |
+          Merged CheckM2 completeness/contamination for ALL genomes (not just this chunk) --
+          genome<TAB>completeness<TAB>contamination, with header.
+        pattern: "*.tsv"
+output:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing chunk information, e.g. [ id:'gunc_chunk0' ]
+    - result:
+        type: file
+        description: |
+          Per-genome result for this chunk: genome, gunc_contaminated (the three-threshold GUNC
+          check alone), gunc_excluded (gunc_contaminated AND completeness<90 -- the reference
+          pipeline's final GUNC-driven exclusion decision).
+        pattern: "*.gunc_filter.tsv"
+  - - versions:
+        - - ${task.process}:
+              type: string
+              description: The process the versions were collected from
+          - gawk:
+              type: string
+              description: The tool name
+          - "awk --version | head -n1":
+              type: eval
+              description: The expression to obtain the version of the tool
+authors:
+  - "@ChristinaVasil"
+maintainers:
+  - "@ChristinaVasil"
