@@ -1,7 +1,7 @@
 name: gunc_filter
 description: |
   Combine GUNC's contamination scores with CheckM2 completeness to decide per-genome GUNC-driven
-  QC exclusion, reproducing EBI-Metagenomics/genomes-catalogue-pipeline's real modules/gunc.nf
+  QC exclusion, reproducing EBI-Metagenomics/genomes-catalogue-pipeline's modules/gunc.nf
   awk/grep logic as an actual shell script.
 keywords:
   - gunc

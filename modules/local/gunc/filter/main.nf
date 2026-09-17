@@ -17,7 +17,6 @@ process GUNC_FILTER {
 
     script:
     // Reproduces EBI-Metagenomics/genomes-catalogue-pipeline's modules/gunc.nf filtering logic. 
-    
     """
     awk -F'\\t' '
         NR==FNR {

@@ -1,7 +1,7 @@
 //
 // Genome QC: CheckM2 completeness/contamination, chunked and grouped by resolved codon table
 // (CheckM2's --ttable is whole-invocation, so genomes sharing a table are batched together).
-
+//
 
 include { CODON_TABLE_RESOLUTION  } from '../codon_table_resolution/main'
 include { CHECKM2                 } from '../../../modules/ebi-metagenomics/checkm2/checkm2/main'
@@ -94,7 +94,7 @@ workflow GENOME_QC {
         .join(ch_gunc_per_genome)
         .map { id, meta, fasta, completeness, contamination, gunc_contaminated, gunc_excluded ->
             // Quality score (QS) = completeness - 5*contamination, matching
-            // EBI-Metagenomics/genomes-catalogue-pipeline's real formula (bin/filter_qs50.py:
+            // EBI-Metagenomics/genomes-catalogue-pipeline's formula (bin/filter_qs50.py:
             // `qs50()`). qs50/qs80 apply that same function at two thresholds -- both also
             // require contamination <= 5.0, per that function's own combined check (not just
             // the raw QS score alone).
