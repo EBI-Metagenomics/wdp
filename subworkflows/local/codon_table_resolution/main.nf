@@ -52,7 +52,7 @@ workflow CODON_TABLE_RESOLUTION {
 
     ch_resolved_miss = ch_branched.override_miss
         .map { meta, fasta -> [meta.id, meta, fasta] }
-        .join(ch_detected)
+        .join(ch_detected, failOnMismatch: true)
         .map { id, meta, fasta, table -> [meta + [known_table: table], fasta] }
 
     ch_genomes_with_table = ch_branched.override_hit.mix(ch_resolved_miss)

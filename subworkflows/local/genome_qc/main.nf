@@ -90,8 +90,8 @@ workflow GENOME_QC {
 
     ch_genomes_with_qc = ch_all_genomes
         .map { meta, fasta -> [meta.id, meta, fasta] }
-        .join(ch_checkm2_per_genome)
-        .join(ch_gunc_per_genome)
+        .join(ch_checkm2_per_genome, failOnMismatch: true)
+        .join(ch_gunc_per_genome, failOnMismatch: true)
         .map { id, meta, fasta, completeness, contamination, gunc_contaminated, gunc_excluded ->
             // Quality score (QS) = completeness - 5*contamination, matching
             // EBI-Metagenomics/genomes-catalogue-pipeline's formula (bin/filter_qs50.py:
