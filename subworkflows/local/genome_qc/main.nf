@@ -82,7 +82,7 @@ workflow GENOME_QC {
         .collectFile(name: 'checkm2_completeness.tsv', newLine: true, sort: true,
             seed: "genome\tcompleteness\tcontamination")
 
-    GUNC_FILTER(GUNC_RUN.out.maxcss_level_tsv, ch_completeness_tsv)
+    GUNC_FILTER(GUNC_RUN.out.maxcss_level_tsv, ch_completeness_tsv.first())
    
     ch_gunc_per_genome = GUNC_FILTER.out.result
         .flatMap { meta, tsv -> tsv.splitCsv(header: true, sep: '\t') }
