@@ -1,8 +1,7 @@
 name: gunc_filter
 description: |
   Combine GUNC's contamination scores with CheckM2 completeness to decide per-genome GUNC-driven
-  QC exclusion, reproducing EBI-Metagenomics/genomes-catalogue-pipeline's modules/gunc.nf
-  awk/grep logic as an actual shell script.
+  QC exclusion, reproducing EBI-Metagenomics/genomes-catalogue-pipeline's modules/gunc.nf filtering logic.
 keywords:
   - gunc
   - checkm2
@@ -10,11 +9,11 @@ keywords:
   - quality control
   - prokaryote
 tools:
-  - gawk:
-      description: GNU awk, used here to implement the reference pipeline's real threshold logic.
-      homepage: https://www.gnu.org/software/gawk/
-      documentation: https://www.gnu.org/software/gawk/manual/gawk.html
-      licence: ["GPL v3"]
+  - python:
+      description: Python standard library, used here to implement GUNC filtering.
+      homepage: https://www.python.org/
+      documentation: https://docs.python.org/3/
+      licence: ["PSF-2.0"]
 input:
   - - meta:
         type: map
@@ -46,10 +45,10 @@ output:
         - - ${task.process}:
               type: string
               description: The process the versions were collected from
-          - gawk:
+          - python:
               type: string
               description: The tool name
-          - "awk --version | head -n1":
+          - "python3 --version":
               type: eval
               description: The expression to obtain the version of the tool
 authors:
