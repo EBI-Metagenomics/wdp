@@ -42,12 +42,12 @@ workflow GENOME_QC {
         .groupTuple()
         .flatMap { table, metas, fastas ->
             [metas, fastas].transpose().collate(checkm2_chunk_size).withIndex().collect { chunk, idx ->
-                [ [id: "ttable_${table}_chunk${idx}", ttable: table], chunk.collect { it[1] } ]
+                [ [id: "ttable_${table}_chunk${idx}", ttable: table], chunk.collect { genome -> genome[1] } ]
             }
         }
 
     if (checkm2_db) {
-        ch_checkm2_db = Channel.value(file(checkm2_db))
+        ch_checkm2_db = channel.value(file(checkm2_db))
     } else {
         CHECKM2_DOWNLOAD_DB()
         ch_checkm2_db = CHECKM2_DOWNLOAD_DB.out.checkm2_db
@@ -72,8 +72,8 @@ workflow GENOME_QC {
         }
 
     ch_gunc_db = gunc_db
-        ? Channel.value(file(gunc_db))
-        : GUNC_DOWNLOADDB(Channel.value('progenomes_2.1')).db
+        ? channel.value(file(gunc_db))
+        : GUNC_DOWNLOADDB(channel.value('progenomes_2.1')).db
 
     GUNC_RUN(ch_gunc_in, ch_gunc_db)
 

@@ -26,14 +26,14 @@ workflow CODON_TABLE_RESOLUTION {
             def resolved = meta.known_ttable ? meta.known_ttable as Integer : null
             [ meta + [ttable: resolved], fasta ]
         }
-        .branch {
-            override_hit:  it[0].ttable != null
+        .branch { meta, fasta ->
+            override_hit:  meta.ttable != null
             override_miss: true
         }
 
     // gTranslate fallback for whatever wasn't resolved by the per-row override
     ch_model_dir = gtranslate_model_path
-        ? Channel.value(file(gtranslate_model_path))
+        ? channel.value(file(gtranslate_model_path))
         : GTRANSLATE_DOWNLOADMODELS().model_dir
 
     ch_gtranslate_in = ch_branched.override_miss
