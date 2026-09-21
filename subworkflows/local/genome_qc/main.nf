@@ -38,7 +38,7 @@ workflow GENOME_QC {
 
     // CheckM2: group by resolved table (mandatory -- --ttable is whole-invocation), then chunk
     ch_checkm2_in = ch_all_genomes
-        .map { meta, fasta -> [meta.known_table, meta, fasta] }
+        .map { meta, fasta -> [meta.ttable, meta, fasta] }
         .groupTuple()
         .flatMap { table, metas, fastas ->
             [metas, fastas].transpose().collate(checkm2_chunk_size).withIndex().collect { chunk, idx ->

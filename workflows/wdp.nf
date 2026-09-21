@@ -61,14 +61,14 @@ workflow WDP {
     // codon table + CheckM2/GUNC QC metrics + the final combined passes_qc decision. 
     GENOME_QC.out.genomes_with_qc
         .map { meta, assembly ->
-            "${meta.id}\t${meta.known_table}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}\t${meta.gunc_contaminated}\t${meta.passes_qc}"
+            "${meta.id}\t${meta.ttable}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}\t${meta.gunc_contaminated}\t${meta.passes_qc}"
         }
         .collectFile(
             name: 'genome_qc_summary.tsv',
             newLine: true,
             sort: true,
             storeDir: "${outdir}/genome_qc",
-            seed: "prefix\tknown_table\tcompleteness\tcontamination\tpasses_qc_80_5\tquality_score\tqs50\tqs80\tgunc_contaminated\tpasses_qc"
+            seed: "prefix\tttable\tcompleteness\tcontamination\tpasses_qc_80_5\tquality_score\tqs50\tqs80\tgunc_contaminated\tpasses_qc"
         )
 
     //

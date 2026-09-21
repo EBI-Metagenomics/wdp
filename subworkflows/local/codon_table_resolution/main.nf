@@ -24,10 +24,10 @@ workflow CODON_TABLE_RESOLUTION {
     ch_branched = ch_samplesheet
         .map { meta, fasta ->
             def resolved = meta.known_ttable ? meta.known_ttable as Integer : null
-            [ meta + [known_table: resolved], fasta ]
+            [ meta + [ttable: resolved], fasta ]
         }
         .branch {
-            override_hit:  it[0].known_table != null
+            override_hit:  it[0].ttable != null
             override_miss: true
         }
 
@@ -53,10 +53,10 @@ workflow CODON_TABLE_RESOLUTION {
     ch_resolved_miss = ch_branched.override_miss
         .map { meta, fasta -> [meta.id, meta, fasta] }
         .join(ch_detected, failOnMismatch: true)
-        .map { id, meta, fasta, table -> [meta + [known_table: table], fasta] }
+        .map { id, meta, fasta, table -> [meta + [ttable: table], fasta] }
 
     ch_genomes_with_table = ch_branched.override_hit.mix(ch_resolved_miss)
 
     emit:
-    genomes_with_table = ch_genomes_with_table   // channel: [ meta (+known_table), fasta ]
+    genomes_with_table = ch_genomes_with_table   // channel: [ meta (+ttable), fasta ]
 }
