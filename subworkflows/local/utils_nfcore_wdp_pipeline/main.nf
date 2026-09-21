@@ -87,7 +87,11 @@ workflow PIPELINE_INITIALISATION {
 
     channel
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
-        .map { meta, fasta -> [ meta, file(fasta) ] }
+        .map { meta, fasta ->
+              def f = file(fasta)
+              if (f.name != "${meta.id}.fasta.gz") error("Samplesheet mismatch: prefix '${meta.id}' and assembly filename ${f.name}' don't match.")
+              [ meta, f ]
+          }
         .set { ch_samplesheet }
 
     emit:
