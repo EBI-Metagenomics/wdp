@@ -4,4 +4,4 @@ channels:
   - bioconda
 dependencies:
   - bioconda::gtdb-gtranslate=0.0.4
-  - bioconda::prodigal>=2.6.2
+  - bioconda::prodigal=2.6.2

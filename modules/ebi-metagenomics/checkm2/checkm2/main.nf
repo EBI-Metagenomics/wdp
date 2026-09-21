@@ -1,6 +1,6 @@
 process CHECKM2 {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_medium'
 
     conda "bioconda::checkm2=1.0.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

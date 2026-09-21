@@ -13,7 +13,7 @@ tools:
       homepage: https://github.com/cmc-aau/gTranslate
       documentation: https://github.com/cmc-aau/gTranslate
       licence:
-        - "Apache-2.0"
+        - "GPL-3.0"
 input: []
 output:
   model_dir:

@@ -29,7 +29,7 @@
             },
             "known_ttable": {
                 "type": "string",
-                "pattern": "^([0-9]+)?$",
+                "enum": ["", "4", "11", "25"],
                 "meta": ["known_ttable"],
                 "description": "Optional per-genome codon table override (e.g. a hand-curated test row for a known table-4 genome). Leave empty to fall through to gTranslate."
             }

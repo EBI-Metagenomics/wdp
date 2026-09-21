@@ -6,7 +6,7 @@ process GEMSPARCL_CLUSTER {
     container "quay.io/microbiome-informatics/gemsparcl@sha256:a5b6296d9d4ce3f7d03845574f75baac72fbe4ea0737762824aef9a5c8d7741a"
 
     input:
-    path rfile
+    path genomes_file
     path completeness_file
 
     output:
@@ -23,7 +23,7 @@ process GEMSPARCL_CLUSTER {
     def args = task.ext.args ?: ''
     """
     gemsparcl cluster \\
-        -i ${rfile} \\
+        -i ${genomes_file} \\
         -o wdp \\
         --completeness-file ${completeness_file} \\
         --threads ${task.cpus} \\
