@@ -98,7 +98,7 @@ workflow GENOME_QC {
             // `qs50()`). qs50/qs80 apply that same function at two thresholds -- both also
             // require contamination <= 5.0, per that function's own combined check (not just
             // the raw QS score alone).
-            def quality_score = completeness - (5.0 * contamination)
+            def quality_score = Math.round((completeness - (5.0 * contamination)) * 100) / 100
             def passes_qc_80_5 = (completeness >= 80.0 && contamination < 5.0)
             [ meta + [
                 completeness: completeness,
