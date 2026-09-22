@@ -2,10 +2,6 @@
 // Resolve each genome's codon (translation) table: per-row known_ttable override ->
 // gTranslate fallback for whatever's left unresolved.
 //
-// Deliberately a standalone subworkflow (not inlined into the larger genome_qc_and_clustering
-// subworkflow) so it can be wired and tested on its own before CheckM2/GUNC/gemsparcl modules
-// exist -- genome_qc_and_clustering will include and extend this once those land.
-//
 
 include { GTRANSLATE_DOWNLOADMODELS } from '../../../modules/local/gtranslate/downloadmodels/main'
 include { GTRANSLATE_DETECTTABLE    } from '../../../modules/local/gtranslate/detecttable/main'
@@ -37,12 +33,21 @@ workflow CODON_TABLE_RESOLUTION {
         : GTRANSLATE_DOWNLOADMODELS().model_dir
 
     ch_gtranslate_in = ch_branched.override_miss
-        .map { meta, fasta -> fasta }
+        // Collect all [meta, fasta] tuples before chunking
+        // This will hurt parallelization as gTranslate will only run once all the genomes have reach this step
         .toList()
-        .flatMap { fastas ->
-            fastas.collate(gtranslate_chunk_size).withIndex().collect { chunk, idx ->
-                [ [id: "gtranslate_chunk${idx}"], chunk ]
-            }
+        .flatMap { entries ->
+            entries
+                // Ensure deterministic ordering regardless of channel arrival order.
+                .sort { a, b -> a[0].id <=> b[0].id }
+                .collect { meta, fasta -> fasta }
+                // Split the sorted entries into fixed-size chunks.
+                .collate(gtranslate_chunk_size)
+                // Add a stable index to each chunk.
+                .withIndex()
+                .collect { chunk, idx ->
+                    [ [id: "gtranslate_chunk${idx}"], chunk ]
+                }
         }
     GTRANSLATE_DETECTTABLE(ch_gtranslate_in, ch_model_dir)
 

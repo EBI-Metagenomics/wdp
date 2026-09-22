@@ -38,12 +38,20 @@ workflow GENOME_QC {
 
     // CheckM2: group by resolved table (mandatory -- --ttable is whole-invocation), then chunk
     ch_checkm2_in = ch_all_genomes
-        .map { meta, fasta -> [meta.ttable, meta, fasta] }
-        .groupTuple()
+        .map { meta, fasta -> [meta.ttable, meta, fasta] }   // [meta, fasta] -> [table, meta, fasta]
+        .groupTuple()                                        // group by table: [table, [meta...], [fasta...]]
         .flatMap { table, metas, fastas ->
-            [metas, fastas].transpose().collate(checkm2_chunk_size).withIndex().collect { chunk, idx ->
-                [ [id: "ttable_${table}_chunk${idx}", ttable: table], chunk.collect { genome -> genome[1] } ]
-            }
+            [metas, fastas]
+                .transpose()                                 // re-pair each meta with its own fasta
+                // Sort deterministically before chunking -- channel arrival order isn't
+                // reproducible across runs, and unsorted collate() would shuffle genomes
+                // between chunks, busting -resume's cache for no reason.
+                .sort { a, b -> a[0].id <=> b[0].id }
+                .collate(checkm2_chunk_size)                  // split the sorted group into fixed-size chunks
+                .withIndex()                                  // pair each chunk with a stable index
+                .collect { chunk, idx ->
+                    [ [id: "ttable_${table}_chunk${idx}", ttable: table], chunk.collect { genome -> genome[1] } ]
+                }
         }
 
     if (checkm2_db) {
@@ -63,12 +71,18 @@ workflow GENOME_QC {
 
     // GUNC: flat chunking (no codon-table grouping needed)
     ch_gunc_in = ch_all_genomes
-        .map { meta, fasta -> fasta }
         .toList()
-        .flatMap { fastas ->
-            fastas.collate(gunc_chunk_size).withIndex().collect { chunk, idx ->
-                [ [id: "gunc_chunk${idx}"], chunk ]
-            }
+        .flatMap { entries ->
+            entries
+                // Sort deterministically before chunking, same reproducibility reason as
+                // CheckM2's chunking above.
+                .sort { a, b -> a[0].id <=> b[0].id }
+                .collect { meta, fasta -> fasta }
+                .collate(gunc_chunk_size)
+                .withIndex()
+                .collect { chunk, idx ->
+                    [ [id: "gunc_chunk${idx}"], chunk ]
+                }
         }
 
     ch_gunc_db = gunc_db
