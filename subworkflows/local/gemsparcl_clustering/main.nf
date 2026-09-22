@@ -20,7 +20,7 @@ workflow GEMSPARCL_CLUSTERING {
     // gemsparcl input: genome_id<TAB>path list 
     ch_genome_paths = ch_passing_genomes
         .map { meta, fasta -> "${meta.id}\t${fasta}" }
-        .collectFile(name: 'gemsparcl_rfile.tsv', newLine: true, sort: true)
+        .collectFile(name: 'gemsparcl_genome_paths.tsv', newLine: true, sort: true)
 
     // Completeness file: genome_id<TAB>completeness. Gemsparcl expects completeness on a 0-1 scale, 
     // which is not CheckM2's native 0-100 scale, hence the /100.0 conversion below.

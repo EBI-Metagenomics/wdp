@@ -114,7 +114,7 @@ workflow GENOME_QC {
                 qs50: (contamination <= 5.0 && quality_score >= 50.0),
                 qs80: (contamination <= 5.0 && quality_score >= 80.0),
                 gunc_contaminated: gunc_contaminated,
-                // Final combined QC gate -- gunc_excluded is GUNC_FILTER's own awk-computed
+                // Final combined QC gate -- gunc_excluded is GUNC_FILTER's own Python-computed
                 // intersection (gunc_contaminated AND completeness<90), matching
                 // genomes-catalogue-pipeline's real bad.txt logic exactly.
                 passes_qc: passes_qc_80_5 && !gunc_excluded

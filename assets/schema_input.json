@@ -25,6 +25,7 @@
                 "type": "integer",
                 "minimum": 1,
                 "meta": ["taxid"],
+                "description": "NCBI taxid. Not consumed by this pipeline's own QC/clustering logic yet -- carried through the meta map for downstream use (e.g. mettannotator annotation).",
                 "errorMessage": "taxid must be a valid NCBI taxid (positive integer)"
             },
             "known_ttable": {
