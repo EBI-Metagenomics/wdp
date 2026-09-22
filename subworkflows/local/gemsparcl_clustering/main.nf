@@ -11,26 +11,24 @@ include { GEMSPARCL_VISUALISE  } from '../../../modules/local/gemsparcl/visualis
 workflow GEMSPARCL_CLUSTERING {
 
     take:
-    ch_genomes_with_qc   // channel: [ meta (+passes_qc, +completeness [0-100 scale]), fasta ] --
-                          //          GENOME_QC.out.genomes_with_qc, unfiltered (filtering to
-                          //          passes_qc==true happens here, not by the caller)
+    ch_passing_genomes    // channel: [ meta (+completeness [0-100 scale]), fasta ] --
+                          //          GENOME_QC.out.genomes_passing_qc, already filtered to
+                          //          passes_qc==true
 
     main:
-
-    // Only genomes that passed the combined QC gate go into clustering.
-    ch_passing = ch_genomes_with_qc.filter { meta, fasta -> meta.passes_qc }
-
-    ch_rfile = ch_passing
+    
+    // gemsparcl input: genome_id<TAB>path list 
+    ch_genome_paths = ch_passing_genomes
         .map { meta, fasta -> "${meta.id}\t${fasta}" }
         .collectFile(name: 'gemsparcl_rfile.tsv', newLine: true, sort: true)
 
-    // completeness file: genome_id<TAB>completeness on a 0-1 scale (gemsparcl's format,
-    // confirmed in docs/source/guides/cluster.rst) -- CheckM2 reports 0-100
-    ch_completeness_file = ch_passing
+    // Completeness file: genome_id<TAB>completeness. Gemsparcl expects completeness on a 0-1 scale, 
+    // which is not CheckM2's native 0-100 scale, hence the /100.0 conversion below.
+    ch_completeness_file = ch_passing_genomes
         .map { meta, fasta -> "${meta.id}\t${meta.completeness / 100.0}" }
         .collectFile(name: 'gemsparcl_completeness.tsv', newLine: true, sort: true)
 
-    GEMSPARCL_CLUSTER(ch_rfile, ch_completeness_file)
+    GEMSPARCL_CLUSTER(ch_genome_paths, ch_completeness_file)
 
     GEMSPARCL_VISUALISE(GEMSPARCL_CLUSTER.out.dists, GEMSPARCL_CLUSTER.out.clusters)
 

@@ -129,9 +129,12 @@ workflow GENOME_QC {
             ], fasta ]
         }
 
+    ch_genomes_passing_qc = ch_genomes_with_qc.filter { meta, fasta -> meta.passes_qc }
+
     emit:
-    genomes_with_qc = ch_genomes_with_qc   // channel: [ meta (+completeness/contamination/
-                                           //           passes_qc_80_5/quality_score/qs50/qs80/
-                                           //           gunc_contaminated/passes_qc), fasta ]
-    versions        = ch_versions
+    genomes_with_qc    = ch_genomes_with_qc    // channel: [ meta (+completeness/contamination/
+                                               //           passes_qc_80_5/quality_score/qs50/qs80/
+                                               //           gunc_contaminated/passes_qc), fasta ]
+    genomes_passing_qc = ch_genomes_passing_qc // channel: same shape, filtered to passes_qc==true
+    versions           = ch_versions
 }

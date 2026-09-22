@@ -55,20 +55,42 @@ workflow WDP {
     //
     // SUBWORKFLOW: Cluster QC-passing genomes with gemsparcl, then export a Cytoscape network
     //
-    GEMSPARCL_CLUSTERING(GENOME_QC.out.genomes_with_qc)
+    GEMSPARCL_CLUSTERING(GENOME_QC.out.genomes_passing_qc)
 
     // Combined summary genome QC output: one row per genome, prefix -> resolved
     // codon table + CheckM2/GUNC QC metrics + the final combined passes_qc decision. 
     GENOME_QC.out.genomes_with_qc
         .map { meta, assembly ->
-            "${meta.id}\t${meta.ttable}\t${meta.completeness}\t${meta.contamination}\t${meta.passes_qc_80_5}\t${meta.quality_score}\t${meta.qs50}\t${meta.qs80}\t${meta.gunc_contaminated}\t${meta.passes_qc}"
+            [
+                meta.id,
+                meta.ttable,
+                meta.completeness,
+                meta.contamination,
+                meta.passes_qc_80_5,
+                meta.quality_score,
+                meta.qs50,
+                meta.qs80,
+                meta.gunc_contaminated,
+                meta.passes_qc
+            ].join('\t')
         }
         .collectFile(
             name: 'genome_qc_summary.tsv',
             newLine: true,
             sort: true,
             storeDir: "${outdir}/genome_qc",
-            seed: "prefix\tttable\tcompleteness\tcontamination\tpasses_qc_80_5\tquality_score\tqs50\tqs80\tgunc_contaminated\tpasses_qc"
+            seed: [
+                'prefix',
+                'ttable',
+                'completeness',
+                'contamination',
+                'passes_qc_80_5',
+                'quality_score',
+                'qs50',
+                'qs80',
+                'gunc_contaminated',
+                'passes_qc'
+            ].join('\t')
         )
 
     //
