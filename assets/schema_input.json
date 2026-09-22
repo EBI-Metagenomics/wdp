@@ -1,33 +1,40 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/EBI-Metagenomics/wdp/master/assets/schema_input.json",
+    "$id": "https://raw.githubusercontent.com/EBI-Metagenomics/wdp/main/assets/schema_input.json",
     "title": "EBI-Metagenomics/wdp pipeline - params.input schema",
-    "description": "Schema for the file provided with params.input",
+    "description": "Schema for the samplesheet used by the wdp pipeline (Slice 1: gTranslate -> CheckM2 -> gemsparcl)",
     "type": "array",
     "items": {
         "type": "object",
         "properties": {
-            "sample": {
+            "prefix": {
                 "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
-                "meta": ["id"]
+                "pattern": "^GC[AF]_[0-9]+\\.[0-9]+$",
+                "meta": ["id"],
+                "unique": true,
+                "errorMessage": "Prefix must be a versioned GCA/GCF accession (e.g. GCA_000006625.1) -- must match the basename of the assembly file exactly (before .fa/.fna/.fasta/.fasta.gz), since downstream tools (CheckM2, gTranslate, GUNC) derive each genome's ID from its assembly filename with only that suffix stripped"
             },
-            "fastq_1": {
+            "assembly": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^\\S+\\.fasta\\.gz$",
+                "errorMessage": "Assembly file must exist and have extension .fasta.gz -- must be named exactly '<prefix>.fasta.gz'"
             },
-            "fastq_2": {
+            "taxid": {
+                "type": "integer",
+                "minimum": 1,
+                "meta": ["taxid"],
+                "description": "NCBI taxid. Not consumed by this pipeline's own QC/clustering logic yet -- carried through the meta map for downstream use (e.g. mettannotator annotation).",
+                "errorMessage": "taxid must be a valid NCBI taxid (positive integer)"
+            },
+            "known_ttable": {
                 "type": "string",
-                "format": "file-path",
-                "exists": true,
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "enum": ["", "4", "11", "25"],
+                "meta": ["known_ttable"],
+                "description": "Optional per-genome codon table override (e.g. a hand-curated test row for a known table-4 genome). Leave empty to fall through to gTranslate."
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["prefix", "assembly", "taxid"]
     }
 }

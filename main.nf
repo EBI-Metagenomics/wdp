@@ -41,6 +41,12 @@ workflow EBIMETAGENOMICS_WDP {
         params.multiqc_logo,
         params.multiqc_methods_description,
         params.outdir,
+        params.gtranslate_model_path,
+        params.gtranslate_chunk_size,
+        params.checkm2_db,
+        params.checkm2_chunk_size,
+        params.gunc_db,
+        params.gunc_chunk_size,
     )
     emit:
     multiqc_report = WDP.out.multiqc_report // channel: /path/to/multiqc_report.html

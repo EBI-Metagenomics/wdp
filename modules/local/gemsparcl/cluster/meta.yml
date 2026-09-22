@@ -1,0 +1,75 @@
+name: gemsparcl_cluster
+description: Cluster genomes by sketch-based similarity, with completeness-aware refinement and representative selection
+keywords:
+  - clustering
+  - dereplication
+  - genomes
+  - sketching
+tools:
+  - gemsparcl:
+      description: |
+        gemsparcl clusters genomes using MinHash sketch-based similarity (sketchlib), with
+        optional completeness-aware refinement and representative-genome selection.
+      homepage: https://github.com/johannahelene/gemsparcl
+      documentation: https://github.com/johannahelene/gemsparcl
+      licence: []
+input:
+  - - rfile:
+        type: file
+        description: |
+          TSV of genome_id<TAB>path, one row per genome to cluster (no header, '#'-comments
+          ignored).
+        pattern: "*.tsv"
+    - completeness_file:
+        type: file
+        description: |
+          TSV of genome_id<TAB>completeness on a 0-1 scale (not CheckM2's native 0-100 -- needs
+          converting upstream), one row per genome.
+        pattern: "*.tsv"
+output:
+  - - clusters:
+        type: file
+        description: Cluster assignments
+        pattern: "wdp_clusters.csv"
+    - stats:
+        type: file
+        description: Per-cluster summary statistics
+        pattern: "wdp_cluster_stats.txt"
+    - log:
+        type: file
+        description: gemsparcl run log
+        pattern: "wdp.log"
+    - representatives:
+        type: file
+        description: Selected representative genome per cluster
+        pattern: "wdp_representatives.txt"
+    - sketch_skm:
+        type: file
+        description: |
+          Sketch database (genome content) -- the REFDB for future incremental `gemsparcl query`
+          runs, must be retained.
+        pattern: "wdp.skm"
+    - sketch_skd:
+        type: file
+        description: |
+          Sketch database (distance data) -- the REFDB for future incremental `gemsparcl query`
+          runs, must be retained.
+        pattern: "wdp.skd"
+    - dists:
+        type: file
+        description: Pairwise distance matrix
+        pattern: "wdp.dists"
+  - - versions:
+        - - ${task.process}:
+              type: string
+              description: The process the versions were collected from
+          - gemsparcl:
+              type: string
+              description: The tool name
+          - "gemsparcl --version 2>&1 | tail -n1":
+              type: eval
+              description: The expression to obtain the version of the tool
+authors:
+  - "@ChristinaVasil"
+maintainers:
+  - "@ChristinaVasil"

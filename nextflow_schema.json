@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/EBI-Metagenomics/wdp/master/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/EBI-Metagenomics/wdp/main/nextflow_schema.json",
     "title": "EBI-Metagenomics/wdp pipeline parameters",
     "description": "A coordinated and scalable Nextflow pipeline for uniform quality control, fast clustering and comprehensive annotation of prokaryotic genomes.",
     "type": "object",
@@ -19,8 +19,8 @@
                     "schema": "assets/schema_input.json",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row.",
+                    "description": "Path to comma-separated file listing the input genome assemblies to process.",
+                    "help_text": "Comma-separated file with a header row, one row per genome assembly. Required columns: prefix (versioned GCA/GCF, e.g. GCA_000006625.1), assembly (path to a .fasta.gz file), taxid. Optional columns: known_ttable (per-genome codon table override). See assets/schema_input.json and assets/samplesheet.csv for the full spec and an example.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -33,6 +33,57 @@
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature"
+                }
+            }
+        },
+        "genome_qc_options": {
+            "title": "Genome QC and clustering options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Options for codon-table resolution, QC, and clustering of input genomes.",
+            "required": ["gtranslate_model_path", "checkm2_db", "gunc_db"],
+            "properties": {
+                "gtranslate_model_path": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Path to a pre-staged directory of gTranslate's GTDB classifier model files. Downloading DBs/models is a separate, standalone workflow's job -- this pipeline expects them to already exist.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "gtranslate_chunk_size": {
+                    "type": "integer",
+                    "default": 5000,
+                    "minimum": 1,
+                    "description": "Maximum number of genomes per GTRANSLATE_DETECTTABLE call. Genomes that fall through to gTranslate (no known_ttable supplied) are split into chunks of this size, so no single task holds the whole population.",
+                    "fa_icon": "fas fa-layer-group"
+                },
+                "checkm2_db": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Path to a pre-staged CheckM2 .dmnd database file. Downloading DBs is a separate, standalone workflow's job -- this pipeline expects it to already exist.",
+                    "fa_icon": "fas fa-database"
+                },
+                "checkm2_chunk_size": {
+                    "type": "integer",
+                    "default": 10000,
+                    "minimum": 1,
+                    "description": "Maximum number of genomes per CHECKM2 call within one resolved-codon-table group. Genomes are first grouped by resolved translation table (CheckM2's --ttable applies to the whole invocation), then split into chunks of this size.",
+                    "fa_icon": "fas fa-layer-group"
+                },
+                "gunc_db": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Path to a pre-staged GUNC .dmnd database file (progenomes_2.1). Downloading DBs is a separate, standalone workflow's job -- this pipeline expects it to already exist.",
+                    "fa_icon": "fas fa-database"
+                },
+                "gunc_chunk_size": {
+                    "type": "integer",
+                    "default": 1000,
+                    "minimum": 1,
+                    "description": "Maximum number of genomes per GUNC_RUN call. No codon-table grouping needed (unlike CheckM2) -- genomes are split into chunks of this size directly.",
+                    "fa_icon": "fas fa-layer-group"
                 }
             }
         },
@@ -176,6 +227,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/genome_qc_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

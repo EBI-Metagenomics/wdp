@@ -1,0 +1,34 @@
+name: gtranslate_downloadmodels
+description: Download and unpack gTranslate's pre-trained GTDB r232 classifier models, used by GTRANSLATE_DETECTTABLE to predict each genome's translation table. Only fetches a tarball -- doesn't run gTranslate itself, so it doesn't need gTranslate's own container.
+keywords:
+  - codon table
+  - genetic code
+  - prokaryotes
+  - gTranslate
+  - download
+tools:
+  - wget:
+      description: GNU Wget, used here to fetch the classifier model tarball.
+      homepage: https://www.gnu.org/software/wget/
+      documentation: https://www.gnu.org/software/wget/manual/wget.html
+      licence: ["GPL v3"]
+input: []
+output:
+  model_dir:
+    - path("gtranslate_models"):
+        type: directory
+        description: Directory containing gTranslate's unpacked GTDB r232 classifier model files (.pkl.gz)
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - wget:
+          type: string
+          description: The tool name
+      - "wget --version | head -n1":
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@ChristinaVasil"
+maintainers:
+  - "@ChristinaVasil"

@@ -1,0 +1,53 @@
+name: gemsparcl_visualise
+description: Export a gemsparcl cluster similarity network to Cytoscape-compatible GraphML files
+keywords:
+  - clustering
+  - visualisation
+  - genomes
+  - cytoscape
+tools:
+  - gemsparcl:
+      description: |
+        gemsparcl visualise rebuilds the similarity network from an existing .dists file (no
+        re-sketching/re-clustering needed) and exports it as GraphML, annotated with cluster
+        assignments, for viewing in Cytoscape.
+      homepage: https://github.com/johannahelene/gemsparcl
+      documentation: https://johannahelene.github.io/gemsparcl/
+      licence: []
+input:
+  - - dists:
+        type: file
+        description: Pairwise ANI distances, from GEMSPARCL_CLUSTER
+        pattern: "*.dists"
+    - clusters_csv:
+        type: file
+        description: |
+          Cluster assignments (genome_id,cluster), from GEMSPARCL_CLUSTER -- annotates each
+          node in the GraphML output.
+        pattern: "*_clusters.csv"
+output:
+  - - graphml:
+        type: file
+        description: |
+          Cytoscape-compatible network file(s), one node per genome. Large networks are split
+          into multiple parts (up to 30,000 nodes each), so this is a variable-count glob, not
+          a single fixed file.
+        pattern: "wdp_vis_part*.graphml"
+    - annotations:
+        type: file
+        description: Per-part node metadata matching each GraphML file's embedded attributes.
+        pattern: "wdp_vis_annotations_part*.csv"
+  - - versions:
+        - - ${task.process}:
+              type: string
+              description: The process the versions were collected from
+          - gemsparcl:
+              type: string
+              description: The tool name
+          - "gemsparcl --version 2>&1 | tail -n1":
+              type: eval
+              description: The expression to obtain the version of the tool
+authors:
+  - "@ChristinaVasil"
+maintainers:
+  - "@ChristinaVasil"
