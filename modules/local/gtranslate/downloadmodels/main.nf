@@ -2,24 +2,18 @@ process GTRANSLATE_DOWNLOADMODELS {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "quay.io/microbiome-informatics/gtranslate@sha256:549f007342ce8a7e19bc411c60c172610ce6feab6e29dd88026dd1c3487b2147"
-   
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] ?
+        'https://depot.galaxyproject.org/singularity/gnu-wget:1.18--h36e9172_9' :
+        'biocontainers/gnu-wget:1.18--h36e9172_9' }"
+
     output:
     path("gtranslate_models")                                  , emit: model_dir
-    tuple val("${task.process}"), val('gtranslate'), eval("gtranslate --version | sed -E 's/.*version ([0-9.]+).*/\\1/'"), emit: versions_gtranslate, topic: versions
+    tuple val("${task.process}"), val('wget'), eval("wget --version | head -n1"), emit: versions_wget, topic: versions
 
     script:
     """
-    python3 -c "
-    import requests
+    wget https://data.gtdb.ecogenomic.org/tools/gtranslate/gtranslate_r232_classifiers.tar.gz
 
-    url = 'https://data.gtdb.ecogenomic.org/tools/gtranslate/gtranslate_r232_classifiers.tar.gz'
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open('gtranslate_r232_classifiers.tar.gz', 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-    "
     mkdir -p gtranslate_models
     tar -xzf gtranslate_r232_classifiers.tar.gz -C gtranslate_models --strip-components=1
     rm gtranslate_r232_classifiers.tar.gz
