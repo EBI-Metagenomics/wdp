@@ -41,12 +41,13 @@
             "type": "object",
             "fa_icon": "fas fa-dna",
             "description": "Options for codon-table resolution, QC, and clustering of input genomes.",
+            "required": ["gtranslate_model_path", "checkm2_db", "gunc_db"],
             "properties": {
                 "gtranslate_model_path": {
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
-                    "description": "Path to a pre-staged directory of gTranslate's GTDB classifier model files. If not supplied, the pipeline downloads them itself.",
+                    "description": "Path to a pre-staged directory of gTranslate's GTDB classifier model files. Downloading DBs/models is a separate, standalone workflow's job -- this pipeline expects them to already exist.",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "gtranslate_chunk_size": {
@@ -60,7 +61,7 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Path to a pre-staged CheckM2 .dmnd database file. If not supplied, the pipeline downloads it itself.",
+                    "description": "Path to a pre-staged CheckM2 .dmnd database file. Downloading DBs is a separate, standalone workflow's job -- this pipeline expects it to already exist.",
                     "fa_icon": "fas fa-database"
                 },
                 "checkm2_chunk_size": {
@@ -74,7 +75,7 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Path to a pre-staged GUNC .dmnd database file (progenomes_2.1). If not supplied, the pipeline downloads it itself.",
+                    "description": "Path to a pre-staged GUNC .dmnd database file (progenomes_2.1). Downloading DBs is a separate, standalone workflow's job -- this pipeline expects it to already exist.",
                     "fa_icon": "fas fa-database"
                 },
                 "gunc_chunk_size": {

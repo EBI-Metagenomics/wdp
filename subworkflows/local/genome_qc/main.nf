@@ -5,8 +5,6 @@
 
 include { CODON_TABLE_RESOLUTION  } from '../codon_table_resolution/main'
 include { CHECKM2                 } from '../../../modules/ebi-metagenomics/checkm2/checkm2/main'
-include { CHECKM2_DOWNLOAD_DB     } from '../../../modules/ebi-metagenomics/checkm2/download_db/main'
-include { GUNC_DOWNLOADDB         } from '../../../modules/nf-core/gunc/downloaddb/main'
 include { GUNC_RUN                } from '../../../modules/nf-core/gunc/run/main'
 include { GUNC_FILTER             } from '../../../modules/local/gunc/filter/main'
 
@@ -14,11 +12,13 @@ workflow GENOME_QC {
 
     take:
     ch_samplesheet          //    channel: [ meta, fasta ] -- meta carries .id, .taxid, .known_ttable
-    gtranslate_model_path   //    path: pre-staged gTranslate classifier model dir, or null to trigger GTRANSLATE_DOWNLOADMODELS
+    gtranslate_model_path   //    path: pre-staged gTranslate classifier model dir. Required --
+                            //       pre-trained models are expected to exist already; downloading
+                            //          them is a separate, standalone workflow's job.
     gtranslate_chunk_size   //    int: max genomes per GTRANSLATE_DETECTTABLE call
-    checkm2_db              //    path: pre-staged CheckM2 .dmnd database, or null to trigger CHECKM2_DOWNLOAD_DB
+    checkm2_db              //    path: pre-staged CheckM2 .dmnd database, required.
     checkm2_chunk_size      //    int: max genomes per CHECKM2 call (within one table-group)
-    gunc_db                 //    path: pre-staged GUNC .dmnd database, or null to trigger GUNC_DOWNLOADDB
+    gunc_db                 //    path: pre-staged GUNC .dmnd database, required.
     gunc_chunk_size         //    int: max genomes per GUNC_RUN call
 
     main:
@@ -54,13 +54,7 @@ workflow GENOME_QC {
                 }
         }
 
-    if (checkm2_db) {
-        ch_checkm2_db = channel.value(file(checkm2_db))
-    } else {
-        CHECKM2_DOWNLOAD_DB()
-        ch_checkm2_db = CHECKM2_DOWNLOAD_DB.out.checkm2_db
-        ch_versions = ch_versions.mix(CHECKM2_DOWNLOAD_DB.out.versions)
-    }
+    ch_checkm2_db = channel.value(file(checkm2_db))
 
     CHECKM2(ch_checkm2_in, ch_checkm2_db)
     ch_versions = ch_versions.mix(CHECKM2.out.versions)
@@ -85,9 +79,7 @@ workflow GENOME_QC {
                 }
         }
 
-    ch_gunc_db = gunc_db
-        ? channel.value(file(gunc_db))
-        : GUNC_DOWNLOADDB(channel.value('progenomes_2.1')).db
+    ch_gunc_db = channel.value(file(gunc_db))
 
     GUNC_RUN(ch_gunc_in, ch_gunc_db)
 

@@ -3,15 +3,15 @@
 // gTranslate fallback for whatever's left unresolved.
 //
 
-include { GTRANSLATE_DOWNLOADMODELS } from '../../../modules/local/gtranslate/downloadmodels/main'
 include { GTRANSLATE_DETECTTABLE    } from '../../../modules/local/gtranslate/detecttable/main'
 
 workflow CODON_TABLE_RESOLUTION {
 
     take:
     ch_samplesheet          //    channel: [ meta, fasta ] -- meta carries .id, .taxid, .known_ttable
-    gtranslate_model_path   //    path: pre-staged gTranslate classifier model dir, or null to
-                            //          trigger GTRANSLATE_DOWNLOADMODELS
+    gtranslate_model_path   //    path: pre-staged gTranslate classifier model dir. Required --
+                            //          this subworkflow expects pre-trained models to already exist;
+                            //          downloading them is a separate, standalone workflow's job.
     gtranslate_chunk_size   //    int: max genomes per GTRANSLATE_DETECTTABLE call
 
     main:
@@ -27,10 +27,7 @@ workflow CODON_TABLE_RESOLUTION {
             override_miss: true
         }
 
-    // gTranslate fallback for whatever wasn't resolved by the per-row override
-    ch_model_dir = gtranslate_model_path
-        ? channel.value(file(gtranslate_model_path))
-        : GTRANSLATE_DOWNLOADMODELS().model_dir
+    ch_model_dir = channel.value(file(gtranslate_model_path))
 
     ch_gtranslate_in = ch_branched.override_miss
         // Collect all [meta, fasta] tuples before chunking
